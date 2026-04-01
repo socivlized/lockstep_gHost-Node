@@ -1,2 +1,12 @@
-# Auto detect text files and perform LF normalization
-* text=auto
+# Enforce Linux line endings (LF) for all code and docs
+# This protects the ubuntu-latest CI pipeline from Windows line endings
+* text=auto eol=lf
+
+# Explicitly define file types
+*.py text eol=lf
+*.md text eol=lf
+*.yml text eol=lf
+
+# Mega Corp override: Force GitHub to recognize this as a Python repository
+# by hiding the massive specification documents from the language statistics
+*.md linguist-detectable=false
