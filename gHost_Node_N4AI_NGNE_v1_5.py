@@ -38,7 +38,7 @@ class OperationalRegime(Enum):
     STABLE_COHERENCE = "Stable Coherence"
     ADAPTIVE_EXPLORATION = "Adaptive Exploration"
     INTENSIVE_REASONING = "Intensive Reasoning"
-    BREACH_LOCKDOWN = "Breach Lockdown"
+    BREACH_LOCKDOWN = "Coherence Fault"
 
 # Data Structures
 class ResonanceVector:
