@@ -235,7 +235,19 @@ async def status():
 @app.post("/step")
 async def step(request: Request):
     data = await request.json()
-    input_vec = np.array(data.get("input_vec", np.random.randn(engine.K)), dtype=np.float32)
+    raw_input = data.get("input_vec")
+    if raw_input is None:
+        input_vec = np.random.randn(engine.K).astype(np.float32)
+    else:
+        try:
+            input_vec = np.array(raw_input, dtype=np.float32)
+        except (TypeError, ValueError):
+            return JSONResponse(status_code=422, content={"detail": "input_vec must contain numeric values"})
+        if input_vec.shape != (engine.K,):
+            return JSONResponse(
+                status_code=422,
+                content={"detail": f"input_vec must contain exactly {engine.K} numeric values"},
+            )
     result = engine.step(input_vec)
     return result
 
