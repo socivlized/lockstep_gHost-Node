@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LockStep Coherence Service</title>
+<style>
+:root{color-scheme:dark;--bg:#090b10;--panel:#10131a;--line:#262b36;--text:#eef1f6;--muted:#8e98a8;--ok:#7bd9a5;--accent:#9ea8ff}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 80% 0,#17192a 0,transparent 36%),var(--bg);color:var(--text);font:14px/1.45 system-ui,sans-serif}
+main{max-width:980px;margin:auto;padding:24px}.top{display:flex;justify-content:space-between;gap:16px;align-items:center;margin-bottom:22px}
+h1{font-size:22px;margin:0}.sub,.label{color:var(--muted)}.badge{border:1px solid var(--line);border-radius:999px;padding:7px 11px}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.card,.work{background:rgba(16,19,26,.86);border:1px solid var(--line);border-radius:16px;padding:16px}
+.value{font-size:24px;margin-top:7px}.work{margin-top:10px}.row{display:flex;gap:10px;flex-wrap:wrap;align-items:end}
+input{flex:1;min-width:220px;background:#0b0e14;border:1px solid var(--line);border-radius:12px;padding:12px;color:var(--text)}
+button{border:0;border-radius:12px;padding:12px 16px;background:var(--text);color:#0a0c10;font-weight:700}pre{white-space:pre-wrap;color:#b8c1cf;min-height:120px}
+.ok{color:var(--ok)}@media(max-width:720px){.grid{grid-template-columns:repeat(2,1fr)}main{padding:16px}}
+</style></head><body><main>
+<div class="top"><div><div class="sub">N4.AI_N.GNE · v1.5 demo</div><h1>LockStep gHost-Node Coherence Service</h1></div><div id="health" class="badge">connecting…</div></div>
+<section class="grid">
+<div class="card"><div class="label">Regime</div><div id="regime" class="value">—</div></div>
+<div class="card"><div class="label">Alignment φ</div><div id="phi" class="value">—</div></div>
+<div class="card"><div class="label">Tension</div><div id="tension" class="value">—</div></div>
+<div class="card"><div class="label">Energy</div><div id="budget" class="value">—</div></div>
+<div class="card"><div class="label">Cycle</div><div id="cycle" class="value">—</div></div>
+<div class="card"><div class="label">Identity integrity</div><div id="identity" class="value">—</div></div>
+<div class="card"><div class="label">Graph nodes</div><div id="nodes" class="value">—</div></div>
+<div class="card"><div class="label">Current state</div><div id="z" class="value">—</div></div>
+</section>
+<section class="work"><div class="label">Coherence probe · five-dimensional input vector</div><div class="row"><input id="vec" value="1,0.25,0.1,-0.05,0.2"><button onclick="step()">Execute step</button></div><pre id="receipt">Waiting for runtime.</pre></section>
+</main><script>
+const API=localStorage.getItem("lockstep_api")||"http://127.0.0.1:8000";
+const $=id=>document.getElementById(id);
+async function refresh(){try{let h=await fetch(API+"/health").then(r=>r.json());$("health").textContent=h.status==="ok"?"● SERVICE READY":"SERVICE DEGRADED";$("health").classList.add("ok");let s=await fetch(API+"/status").then(r=>r.json());for(const [id,key] of Object.entries({regime:"regime",phi:"phi",tension:"tension",budget:"budget",cycle:"cycle",identity:"identity_integrity",nodes:"nodes",z:"current_z"}))$(id).textContent=s[key];}catch(e){$("health").textContent="● OFFLINE";$("receipt").textContent="Start the local coherence service on "+API+"\n"+e}}
+async function step(){try{const input_vec=$("vec").value.split(",").map(Number);if(input_vec.length!==5||input_vec.some(Number.isNaN))throw Error("Enter exactly five comma-separated numbers.");const r=await fetch(API+"/step",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({input_vec})}).then(async x=>{if(!x.ok)throw Error(await x.text());return x.json()});$("receipt").textContent=JSON.stringify(r,null,2);await refresh()}catch(e){$("receipt").textContent=String(e)}}
+refresh();setInterval(refresh,3000);
+</script></body></html>
