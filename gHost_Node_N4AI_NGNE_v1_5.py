@@ -26,6 +26,7 @@ import pickle
 import os
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 
 # Core Enumerations
@@ -200,17 +201,56 @@ class InferalAIEngine:
 # =============================================================================
 # FastAPI endpoint (optional)
 # =============================================================================
-app = FastAPI()
+app = FastAPI(title="LockStep gHost-Node Coherence Service", version="1.5-demo")
+app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["GET", "POST"], allow_headers=["*"])
 
 engine = InferalAIEngine()
+
+def engine_status() -> Dict[str, Any]:
+    return {
+        "service": "LockStep gHost-Node Coherence Service",
+        "version": "1.5-demo",
+        "status": "ready",
+        "cycle": engine.cycle,
+        "current_z": engine.current_z,
+        "identity_integrity": engine.identity_lock,
+        "regime": engine._last_regime.value,
+        "tension": round(engine._last_tension, 4),
+        "phi": round(engine._last_phi, 4),
+        "delta": round(engine._last_delta, 4),
+        "lam": round(engine._last_lam, 4),
+        "budget": round(engine.economy.energy_budget, 2),
+        "nodes": engine.graph.number_of_nodes(),
+        "edges": engine.graph.number_of_edges(),
+    }
+
+@app.get("/health")
+async def health():
+    return {"status": "ok", "service": "ghostnode", "version": "1.5-demo"}
+
+@app.get("/status")
+async def status():
+    return engine_status()
 
 @app.post("/step")
 async def step(request: Request):
     data = await request.json()
-    input_vec = np.array(data.get("input_vec", np.random.randn(engine.K)), dtype=np.float32)
+    raw_input = data.get("input_vec")
+    if raw_input is None:
+        input_vec = np.random.randn(engine.K).astype(np.float32)
+    else:
+        try:
+            input_vec = np.array(raw_input, dtype=np.float32)
+        except (TypeError, ValueError):
+            return JSONResponse(status_code=422, content={"detail": "input_vec must contain numeric values"})
+        if input_vec.shape != (engine.K,):
+            return JSONResponse(
+                status_code=422,
+                content={"detail": f"input_vec must contain exactly {engine.K} numeric values"},
+            )
     result = engine.step(input_vec)
     return result
 
 if __name__ == "__main__":
     print("✅ gHost Node v1_5 booted cleanly — LockStep™ is live")
-    # uvicorn.run(app, host="0.0.0.0", port=8000)  # uncomment for server mode
+    uvicorn.run(app, host=os.getenv("HOST", "127.0.0.1"), port=int(os.getenv("PORT", "8000")))
